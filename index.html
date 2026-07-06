@@ -3,151 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RU Schedule AI</title>
+    <title>RU Schedule | AI Reader</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
-    <!-- เรียกใช้ไลบรารีอ่าน PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
+        :root {
+            --bg-color: #f9fafb;
+            --surface: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --accent: #000000;
+        }
+        
         body {
             font-family: 'Kanit', sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
-            padding: 40px 20px;
+            padding: 5vh 20px;
             margin: 0;
+            -webkit-font-smoothing: antialiased;
         }
+
         .container {
-            background: #2a2a2a;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 800px;
+            max-width: 640px;
         }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
         h2 {
-            text-align: center;
-            color: #4CAF50;
-            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 28px;
+            margin: 0 0 5px 0;
+            letter-spacing: -0.5px;
         }
+
         .stats {
-            text-align: center;
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 300;
         }
-        input[type="file"], input[type="text"] {
+
+        /* กล่องอัปโหลดสไตล์มินิมอล */
+        .upload-wrapper {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .upload-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            background: var(--surface);
+            border: 1px dashed #d1d5db;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+        }
+
+        .upload-box:hover {
+            border-color: var(--text-main);
+            background: #fdfdfd;
+        }
+
+        .upload-box svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* ช่องค้นหาแบบไร้ปุ่ม */
+        .search-box {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
             width: 100%;
             box-sizing: border-box;
-            background: #333;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 8px;
-            padding: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 16px;
+            padding: 16px 20px;
             font-family: 'Kanit', sans-serif;
-            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 300;
+            outline: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
         }
-        .btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
+
+        input[type="text"]::placeholder {
+            color: #9ca3af;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--text-main);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        /* ผลลัพธ์ */
+        #status {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 10px;
+            height: 20px;
+        }
+
+        .result-box {
+            background: var(--surface);
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .result-text {
+            font-size: 15px;
+            line-height: 1.5;
+            font-weight: 300;
+            word-break: break-word;
+        }
+
+        /* ปุ่มคัดลอกแบบ Pill */
+        .btn-copy {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 20px;
             cursor: pointer;
             font-family: 'Kanit', sans-serif;
+            font-size: 12px;
             transition: 0.2s;
             white-space: nowrap;
         }
-        .btn:hover { background-color: #45a049; }
-        .result-box {
-            background: #333;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid #4CAF50;
+
+        .btn-copy:hover {
+            background-color: var(--text-main);
+            color: white;
+            border-color: var(--text-main);
         }
-        .result-text {
-            word-break: break-word;
-            margin-right: 15px;
-            line-height: 1.6;
-            color: #e0e0e0;
-        }
-        #status {
-            text-align: center;
-            color: #4CAF50;
-            margin: 10px 0;
-            font-style: italic;
-        }
-        hr {
-            border: 0;
-            height: 1px;
-            background: #444;
-            margin: 25px 0;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🤖 RU Schedule AI</h2>
-    <div class="stats" id="usageCount">สถิติการใช้งาน: 0 ครั้ง</div>
+    <header>
+        <h2>RU Schedule</h2>
+        <div class="stats" id="usageCount">ใช้งานไปแล้ว 0 ครั้ง</div>
+    </header>
 
-    <!-- ส่วนที่ 1: อัปโหลด PDF -->
-    <div style="margin-bottom: 5px; color: #ccc;">📄 1. อัปโหลดไฟล์ PDF ตารางเรียน/สอบ</div>
-    <input type="file" id="pdfInput" accept="application/pdf" />
-    <div id="status"></div>
+    <div class="upload-wrapper">
+        <label class="upload-box" id="uploadLabel">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span id="uploadText">คลิกเพื่ออัปโหลดไฟล์ PDF ตารางเรียน</span>
+            <input type="file" id="pdfInput" accept="application/pdf" />
+        </label>
+        <div id="status"></div>
+    </div>
 
-    <hr>
-
-    <!-- ส่วนที่ 2: ค้นหาข้อมูล -->
-    <div style="margin-bottom: 5px; color: #ccc;">🔍 2. ค้นหาวิชา (ใส่ได้หลายวิชา เช่น CEE2301 ENG1001)</div>
-    <div style="display: flex; gap: 10px;">
-        <input type="text" id="searchInput" placeholder="พิมพ์รหัสวิชาที่นี่...">
-        <button class="btn" onclick="searchData()">ค้นหา</button>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="พิมพ์รหัสวิชา... (เช่น CEE2301 ENG1001)" autocomplete="off">
     </div>
 
     <div id="resultsArea"></div>
 </div>
 
 <script>
-    // ตั้งค่าตัวอ่าน PDF
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    
     let extractedLines = [];
 
-    // เมื่อเปิดเว็บ ให้เช็คว่าเคยมีข้อมูลที่ AI อ่านไว้แล้วไหม
     window.onload = function() {
         updateStats();
         let savedData = localStorage.getItem('pdf_extracted_data');
         if(savedData) {
             extractedLines = JSON.parse(savedData);
-            document.getElementById('status').innerText = '✅ พบข้อมูลที่เคยอ่านไว้แล้ว ค้นหาได้เลย!';
+            document.getElementById('status').innerText = 'พร้อมใช้งาน (มีข้อมูลเดิมในระบบแล้ว)';
         }
     };
 
-    // ฟังก์ชันอ่านไฟล์ PDF เมื่อเลือกไฟล์
+    // อัปโหลดและอ่าน PDF
     document.getElementById('pdfInput').addEventListener('change', async function(e) {
         let file = e.target.files[0];
         if(!file) return;
 
         let statusDiv = document.getElementById('status');
-        statusDiv.style.color = '#ff9800';
-        statusDiv.innerText = '⏳ AI กำลังสแกนและแปลงไฟล์ PDF...';
+        let uploadText = document.getElementById('uploadText');
+        
+        uploadText.innerText = file.name;
+        statusDiv.innerText = 'กำลังประมวลผลไฟล์...';
         
         let arrayBuffer = await file.arrayBuffer();
         let pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        
         extractedLines = [];
 
-        // วนอ่านทีละหน้า
         for(let i = 1; i <= pdf.numPages; i++) {
             let page = await pdf.getPage(i);
             let textContent = await page.getTextContent();
             
-            // จัดกลุ่มข้อความที่อยู่ในบรรทัดเดียวกัน (เทียบจากแกน Y)
             let yMap = {};
             textContent.items.forEach(item => {
                 let y = Math.round(item.transform[5]); 
@@ -155,86 +238,90 @@
                 yMap[y].push(item);
             });
 
-            // เรียงบรรทัดจากบนลงล่าง
             let yKeys = Object.keys(yMap).map(Number).sort((a, b) => b - a);
             
             yKeys.forEach(y => {
-                // เรียงข้อความจากซ้ายไปขวา แล้วคั่นด้วย |
                 let rowItems = yMap[y].sort((a, b) => a.transform[4] - b.transform[4]);
                 let rowText = rowItems.map(item => item.str.trim()).filter(str => str.length > 0).join(' | ');
-                
-                if(rowText) {
-                    extractedLines.push(rowText);
-                }
+                if(rowText) extractedLines.push(rowText);
             });
         }
 
-        // บันทึกสิ่งที่อ่านได้ลงเครื่อง
         try {
             localStorage.setItem('pdf_extracted_data', JSON.stringify(extractedLines));
-            statusDiv.style.color = '#4CAF50';
-            statusDiv.innerText = '✅ สแกน PDF เสร็จสิ้น! พร้อมค้นหาแล้ว';
+            statusDiv.innerText = 'สแกนสำเร็จ พิมพ์ค้นหาด้านล่างได้เลย';
         } catch(err) {
-            statusDiv.style.color = '#4CAF50';
-            statusDiv.innerText = '✅ สแกน PDF เสร็จสิ้น! (ไฟล์ใหญ่เกินกว่าจะจำไว้ถาวร แต่ค้นหาตอนนี้ได้เลย)';
+            statusDiv.innerText = 'สแกนสำเร็จ (ไฟล์ใหญ่เกินบันทึกถาวร แต่ค้นหาได้ปกติ)';
         }
     });
 
-    // ฟังก์ชันค้นหา
-    function searchData() {
-        let keyword = document.getElementById('searchInput').value.trim().toUpperCase();
-        if(!keyword) return alert('กรุณาพิมพ์รหัสวิชา');
-        if(extractedLines.length === 0) return alert('กรุณาอัปโหลดไฟล์ PDF ก่อนครับ');
-
-        // นับสถิติเพิ่ม 1 ครั้ง
-        let count = parseInt(localStorage.getItem('my_ai_usage_count') || 0) + 1;
-        localStorage.setItem('my_ai_usage_count', count);
-        updateStats();
-
+    // ระบบค้นหาแบบ Real-time (พิมพ์ปุ๊บหาปั๊บ)
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        
+        let keyword = e.target.value.trim().toUpperCase();
         let resultsArea = document.getElementById('resultsArea');
-        resultsArea.innerHTML = '<div id="status" style="color:#4CAF50;">กำลังค้นหา...</div>';
+        
+        if(!keyword) {
+            resultsArea.innerHTML = '';
+            return;
+        }
 
-        setTimeout(() => {
-            let searchTerms = keyword.split(/\s+/); // แยกคำค้นหาด้วยการเว้นวรรค
+        if(extractedLines.length === 0) {
+            resultsArea.innerHTML = '<div style="text-align:center; color:#6b7280; font-size: 14px;">กรุณาอัปโหลดไฟล์ PDF ก่อนครับ</div>';
+            return;
+        }
+
+        // หน่วงเวลาเล็กน้อยให้พิมพ์เสร็จก่อน ค่อยนับสถิติและค้นหา
+        searchTimeout = setTimeout(() => {
+            let count = parseInt(localStorage.getItem('my_ai_usage_count') || 0) + 1;
+            localStorage.setItem('my_ai_usage_count', count);
+            updateStats();
+
+            let searchTerms = keyword.split(/\s+/);
             let foundHTML = '';
 
             extractedLines.forEach(line => {
                 let lineUpper = line.toUpperCase();
-                
-                // เช็คว่าบรรทัดนี้มีวิชาที่ค้นหาไหม
                 let isMatch = searchTerms.some(term => lineUpper.includes(term));
                 
                 if(isMatch) {
                     foundHTML += `
                         <div class="result-box">
                             <div class="result-text">${line}</div>
-                            <button class="btn" onclick="copyText('${line.replace(/'/g, "\\'")}')">คัดลอก</button>
+                            <button class="btn-copy" onclick="copyText(this, '${line.replace(/'/g, "\\'")}')">คัดลอก</button>
                         </div>
                     `;
                 }
             });
 
             if(foundHTML === '') {
-                resultsArea.innerHTML = '<div style="text-align:center; margin-top:20px; color:#ff4444;">❌ ไม่พบข้อมูลวิชานี้ใน PDF</div>';
+                resultsArea.innerHTML = '<div style="text-align:center; color:#6b7280; font-size: 14px; margin-top: 20px;">ไม่พบข้อมูลวิชานี้</div>';
             } else {
                 resultsArea.innerHTML = foundHTML;
             }
-        }, 300); // ดีเลย์นิดหน่อยให้ดูเหมือน AI ประมวลผล
-    }
+        }, 300);
+    });
 
-    // ฟังก์ชันอัปเดตสถิติ
     function updateStats() {
         let count = localStorage.getItem('my_ai_usage_count') || 0;
-        document.getElementById('usageCount').innerText = `สถิติการใช้งาน: ${count} ครั้ง`;
+        document.getElementById('usageCount').innerText = `ใช้งานไปแล้ว ${count} ครั้ง`;
     }
 
-    // ฟังก์ชันคัดลอกข้อความ
-    function copyText(text) {
+    function copyText(btn, text) {
         navigator.clipboard.writeText(text).then(() => {
-            alert('✅ คัดลอกข้อมูลเรียบร้อยแล้ว');
-        }).catch(err => {
-            console.error('Copy failed', err);
-        });
+            let originalText = btn.innerText;
+            btn.innerText = 'คัดลอกแล้ว ✔';
+            btn.style.backgroundColor = '#111827';
+            btn.style.color = '#fff';
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = 'transparent';
+                btn.style.color = '#111827';
+            }, 1500);
+        }).catch(err => console.error('Copy failed', err));
     }
 </script>
 
